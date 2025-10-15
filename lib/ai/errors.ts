@@ -24,7 +24,7 @@ export class GeminiError extends Error {
     constructor(
         public type: GeminiErrorType,
         message: string,
-        public originalError?: any,
+        public originalError?: unknown,
         public statusCode?: number
     ) {
         super(message)
@@ -70,7 +70,23 @@ export class GeminiError extends Error {
 /**
  * 원본 에러를 GeminiError로 변환
  */
-export function parseGeminiError(error: any): GeminiError {
+export function parseGeminiError(error: unknown): GeminiError {
+    // 타입 가드를 사용하여 안전하게 접근
+    const isErrorWithMessage = (
+        err: unknown
+    ): err is {
+        message?: string
+        status?: number
+        name?: string
+        code?: string
+    } => {
+        return typeof err === 'object' && err !== null
+    }
+
+    if (!isErrorWithMessage(error)) {
+        return new GeminiError(GeminiErrorType.UNKNOWN, 'Unknown error', error)
+    }
+
     // API 키 관련 에러
     if (error.message?.includes('API key') || error.status === 401) {
         return new GeminiError(
@@ -154,7 +170,7 @@ export function parseGeminiError(error: any): GeminiError {
 /**
  * 재시도 불가능한 에러인지 확인
  */
-export function isNonRetryableError(error: any): boolean {
+export function isNonRetryableError(error: unknown): boolean {
     const geminiError =
         error instanceof GeminiError ? error : parseGeminiError(error)
     return !geminiError.isRetryable()

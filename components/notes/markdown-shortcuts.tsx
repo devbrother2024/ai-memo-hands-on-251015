@@ -8,7 +8,7 @@
 import { useEffect, useRef } from 'react'
 
 interface MarkdownShortcutsProps {
-    textareaRef: React.RefObject<HTMLTextAreaElement>
+    textareaRef: React.RefObject<HTMLTextAreaElement | null>
     onInsert: (text: string, cursorOffset?: number) => void
 }
 
@@ -17,7 +17,7 @@ export function useMarkdownShortcuts({
     onInsert
 }: MarkdownShortcutsProps) {
     const lastInputTime = useRef<number>(0)
-    const inputTimeout = useRef<NodeJS.Timeout>()
+    const inputTimeout = useRef<NodeJS.Timeout | undefined>(undefined)
 
     useEffect(() => {
         const textarea = textareaRef.current

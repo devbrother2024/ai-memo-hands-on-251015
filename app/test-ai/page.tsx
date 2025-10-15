@@ -12,7 +12,22 @@ import { Textarea } from '@/components/ui/textarea'
 
 export default function TestAIPage() {
     const [prompt, setPrompt] = useState('')
-    const [result, setResult] = useState<any>(null)
+    const [result, setResult] = useState<{
+        success: boolean
+        data?: {
+            success?: boolean
+            latencyMs?: number
+            timestamp?: string
+            text?: string
+            model?: string
+            inputTokens?: number
+            outputTokens?: number
+            totalTokens?: number
+            estimatedTokens?: number
+            maxTokens?: number
+            isWithinLimit?: boolean
+        }
+    } | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -110,8 +125,7 @@ export default function TestAIPage() {
                         ✅ 성공
                     </h3>
 
-                    {/* 헬스체크 결과 */}
-                    {result.data.success !== undefined && (
+                    {result.data && result.data.success !== undefined && (
                         <div className="space-y-2">
                             <p>
                                 <strong>상태:</strong>{' '}
@@ -119,34 +133,38 @@ export default function TestAIPage() {
                             </p>
                             <p>
                                 <strong>응답 시간:</strong>{' '}
-                                {result.data.latencyMs}ms
+                                {result.data.latencyMs
+                                    ? `${result.data.latencyMs}ms`
+                                    : 'N/A'}
                             </p>
                             <p>
                                 <strong>타임스탬프:</strong>{' '}
-                                {new Date(result.data.timestamp).toLocaleString(
-                                    'ko-KR'
-                                )}
+                                {result.data.timestamp
+                                    ? new Date(
+                                          result.data.timestamp
+                                      ).toLocaleString('ko-KR')
+                                    : 'N/A'}
                             </p>
                         </div>
                     )}
 
-                    {/* 텍스트 생성 결과 */}
-                    {result.data.text && (
+                    {result.data && result.data.text && (
                         <div className="space-y-2">
                             <p>
-                                <strong>모델:</strong> {result.data.model}
+                                <strong>모델:</strong>{' '}
+                                {result.data.model || 'N/A'}
                             </p>
                             <p>
                                 <strong>입력 토큰:</strong>{' '}
-                                {result.data.inputTokens}
+                                {result.data.inputTokens || 'N/A'}
                             </p>
                             <p>
                                 <strong>출력 토큰:</strong>{' '}
-                                {result.data.outputTokens}
+                                {result.data.outputTokens || 'N/A'}
                             </p>
                             <p>
                                 <strong>총 토큰:</strong>{' '}
-                                {result.data.totalTokens}
+                                {result.data.totalTokens || 'N/A'}
                             </p>
                             <div className="mt-4 p-4 bg-white rounded border">
                                 <strong>생성된 텍스트:</strong>
@@ -157,31 +175,31 @@ export default function TestAIPage() {
                         </div>
                     )}
 
-                    {/* 토큰 계산 결과 */}
-                    {result.data.estimatedTokens !== undefined && (
-                        <div className="space-y-2">
-                            <p>
-                                <strong>예상 토큰 수:</strong>{' '}
-                                {result.data.estimatedTokens}
-                            </p>
-                            <p>
-                                <strong>최대 토큰 제한:</strong>{' '}
-                                {result.data.maxTokens}
-                            </p>
-                            <p>
-                                <strong>제한 내 여부:</strong>{' '}
-                                {result.data.isWithinLimit ? (
-                                    <span className="text-green-600">
-                                        ✓ 제한 내
-                                    </span>
-                                ) : (
-                                    <span className="text-red-600">
-                                        ✗ 제한 초과
-                                    </span>
-                                )}
-                            </p>
-                        </div>
-                    )}
+                    {result.data &&
+                        result.data.estimatedTokens !== undefined && (
+                            <div className="space-y-2">
+                                <p>
+                                    <strong>예상 토큰 수:</strong>{' '}
+                                    {result.data.estimatedTokens}
+                                </p>
+                                <p>
+                                    <strong>최대 토큰 제한:</strong>{' '}
+                                    {result.data.maxTokens || 'N/A'}
+                                </p>
+                                <p>
+                                    <strong>제한 내 여부:</strong>{' '}
+                                    {result.data.isWithinLimit ? (
+                                        <span className="text-green-600">
+                                            ✓ 제한 내
+                                        </span>
+                                    ) : (
+                                        <span className="text-red-600">
+                                            ✗ 제한 초과
+                                        </span>
+                                    )}
+                                </p>
+                            </div>
+                        )}
                 </Card>
             )}
 

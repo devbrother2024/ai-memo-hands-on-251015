@@ -4,11 +4,8 @@
 // 관련 파일: lib/ai/gemini-client.ts, lib/ai/types.ts, lib/ai/utils.ts
 
 import { getGeminiClient } from './gemini-client'
-import {
-    GenerateTagsRequest,
-    GenerateTagsResponse
-} from './types'
-import { GeminiError } from './errors'
+import { GenerateTagsRequest, GenerateTagsResponse } from './types'
+import { GeminiError, GeminiErrorType } from './errors'
 import { estimateTokens, validateTokenLimit, truncateText } from './utils'
 
 /**
@@ -22,13 +19,15 @@ export class TagGenerationService {
      * @param request 태그 생성 요청
      * @returns 생성된 태그 목록
      */
-    async generateTags(request: GenerateTagsRequest): Promise<GenerateTagsResponse> {
+    async generateTags(
+        request: GenerateTagsRequest
+    ): Promise<GenerateTagsResponse> {
         const { content, maxTags = 6, model, maxTokens = 2000 } = request
 
         // 입력 검증
         if (!content || content.trim().length < 100) {
             throw new GeminiError(
-                'INVALID_INPUT' as any,
+                'INVALID_INPUT' as GeminiErrorType,
                 '노트 내용이 100자 이상이어야 합니다',
                 null
             )
@@ -41,7 +40,7 @@ export class TagGenerationService {
             const truncatedTokens = estimateTokens(truncated)
             if (!validateTokenLimit(truncatedTokens, maxTokens)) {
                 throw new GeminiError(
-                    'TOKEN_LIMIT_EXCEEDED' as any,
+                    'TOKEN_LIMIT_EXCEEDED' as GeminiErrorType,
                     '토큰 제한을 초과했습니다',
                     null
                 )
@@ -76,8 +75,10 @@ export class TagGenerationService {
                 throw error
             }
             throw new GeminiError(
-                'API_ERROR' as any,
-                `태그 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`,
+                'API_ERROR' as GeminiErrorType,
+                `태그 생성 중 오류가 발생했습니다: ${
+                    error instanceof Error ? error.message : '알 수 없는 오류'
+                }`,
                 error
             )
         }
@@ -115,14 +116,17 @@ ${content}
     private parseTagsResponse(response: string, maxTags: number): string[] {
         try {
             // JSON 배열 형태 파싱 시도
-            const jsonMatch = response.match(/\[(.*?)\]/s)
+            const jsonMatch = response.match(/\[([\s\S]*?)\]/)
             if (jsonMatch) {
                 const jsonStr = `[${jsonMatch[1]}]`
                 const parsed = JSON.parse(jsonStr)
-                
+
                 if (Array.isArray(parsed)) {
                     return parsed
-                        .filter(tag => typeof tag === 'string' && tag.trim().length > 0)
+                        .filter(
+                            tag =>
+                                typeof tag === 'string' && tag.trim().length > 0
+                        )
                         .map(tag => tag.trim())
                         .slice(0, maxTags)
                 }
@@ -131,10 +135,14 @@ ${content}
             // JSON 파싱 실패 시 줄바꿈으로 분리된 태그 목록 파싱
             const lines = response.split('\n')
             const tags: string[] = []
-            
+
             for (const line of lines) {
                 const cleanLine = line.trim()
-                if (cleanLine && !cleanLine.startsWith('[') && !cleanLine.startsWith(']')) {
+                if (
+                    cleanLine &&
+                    !cleanLine.startsWith('[') &&
+                    !cleanLine.startsWith(']')
+                ) {
                     // 따옴표 제거
                     const tag = cleanLine.replace(/^["']|["']$/g, '').trim()
                     if (tag && tag.length <= 10) {

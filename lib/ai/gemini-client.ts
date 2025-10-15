@@ -12,7 +12,7 @@ import {
     HealthCheckResult,
     APIUsageLog
 } from './types'
-import { GeminiError, parseGeminiError } from './errors'
+import { GeminiError, GeminiErrorType, parseGeminiError } from './errors'
 import {
     estimateTokens,
     validateTokenLimit,
@@ -70,7 +70,7 @@ export class GeminiClient implements AIService {
             const truncatedTokens = this.estimateTokens(truncated)
             if (!this.validateTokenLimit(truncatedTokens, effectiveMax)) {
                 throw new GeminiError(
-                    'TOKEN_LIMIT_EXCEEDED' as any,
+                    'TOKEN_LIMIT_EXCEEDED' as GeminiErrorType,
                     `Input tokens (${inputTokens}) exceed limit`,
                     null
                 )
@@ -164,7 +164,7 @@ export class GeminiClient implements AIService {
                 text: response.text,
                 finishReason: response.candidates?.[0]?.finishReason || 'stop'
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             if (isDebugMode()) {
                 console.error('[GeminiClient] API call failed:', error)
             }

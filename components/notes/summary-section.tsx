@@ -41,8 +41,12 @@ export function SummarySection({
             }
             const data = await response.json()
             setSummary(data.summary)
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : '알 수 없는 오류가 발생했습니다'
+            )
             setSummary(null)
         } finally {
             setLoading(false)
@@ -66,8 +70,12 @@ export function SummarySection({
             }
             const data = await response.json()
             setSummary(data.summary)
-        } catch (err: any) {
-            setError(err.message)
+        } catch (err: unknown) {
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : '알 수 없는 오류가 발생했습니다'
+            )
             setSummary(null)
         } finally {
             setLoading(false)
