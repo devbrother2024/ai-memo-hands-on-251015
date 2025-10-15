@@ -10,6 +10,7 @@ import { useAutoSave } from '@/lib/notes/hooks'
 import { cn } from '@/lib/utils'
 import type { Note } from '@/lib/db/schema/notes'
 import { SummarySection } from '@/components/notes/summary-section'
+import { TagsSection } from '@/components/notes/tags-section'
 import { MarkdownRenderer } from './markdown-renderer'
 import { AdvancedMarkdownEditor } from './advanced-markdown-editor'
 import { Button } from '@/components/ui/button'
@@ -171,6 +172,18 @@ export function NoteEditor({ note, className }: NoteEditorProps) {
 
                 {/* 요약 섹션 */}
                 <SummarySection noteId={note.id} noteContent={content} />
+
+                {/* 태그 섹션 */}
+                <div className="mt-6">
+                    <TagsSection 
+                        noteId={note.id} 
+                        content={content}
+                        onTagClick={(tagName) => {
+                            // 태그 클릭 시 해당 태그로 필터링된 노트 목록으로 이동
+                            window.location.href = `/notes?tag=${encodeURIComponent(tagName)}`
+                        }}
+                    />
+                </div>
 
                 {/* 키보드 단축키 안내 */}
                 <div className="mt-6 text-sm text-muted-foreground text-center">

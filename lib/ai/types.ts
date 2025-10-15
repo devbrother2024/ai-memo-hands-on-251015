@@ -68,3 +68,24 @@ export interface HealthCheckResult {
     error?: string
     timestamp: Date
 }
+
+/**
+ * 태그 생성 요청 인터페이스
+ */
+export interface GenerateTagsRequest {
+    content: string
+    maxTags?: number
+    model?: string
+    maxTokens?: number
+}
+
+/**
+ * 태그 생성 응답 인터페이스
+ */
+export interface GenerateTagsResponse {
+    tags: string[]
+    model: string
+    inputTokens: number
+    outputTokens: number
+    finishReason: string
+}

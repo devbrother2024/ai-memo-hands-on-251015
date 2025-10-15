@@ -5,6 +5,7 @@ import {
     searchUserNotes,
     type NotesSort
 } from '@/lib/notes/queries'
+import { getNotesByTagIds } from '@/lib/notes/tag-queries'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
@@ -15,7 +16,7 @@ import { SearchInput } from '@/components/notes/search-input'
 export default async function NotesPage({
     searchParams
 }: {
-    searchParams: Promise<{ page?: string; sort?: string; search?: string }>
+    searchParams: Promise<{ page?: string; sort?: string; search?: string; tag?: string }>
 }) {
     // 로그인 확인
     const supabase = await createClient()
@@ -34,24 +35,37 @@ export default async function NotesPage({
     const currentPage = Math.max(1, parseInt(params?.page || '1', 10) || 1)
     const sortParam = (params?.sort || 'newest') as NotesSort
     const searchQuery = params?.search || ''
+    const tagFilter = params?.tag || ''
 
-    // 검색 또는 일반 노트 조회
-    const { notes, totalCount } = searchQuery
-        ? await searchUserNotes({
-              query: searchQuery,
-              page: currentPage,
-              limit: PAGE_SIZE,
-              sort: ['newest', 'oldest', 'title'].includes(sortParam)
-                  ? sortParam
-                  : 'newest'
-          })
-        : await getUserNotesPaginated({
-              page: currentPage,
-              limit: PAGE_SIZE,
-              sort: ['newest', 'oldest', 'title'].includes(sortParam)
-                  ? sortParam
-                  : 'newest'
-          })
+    // 태그 필터링, 검색 또는 일반 노트 조회
+    let notes, totalCount
+    if (tagFilter) {
+        // 태그로 필터링된 노트 조회 (간단한 구현)
+        const filteredNotes = await getNotesByTagIds(user.id, [tagFilter])
+        notes = filteredNotes
+        totalCount = filteredNotes.length
+    } else if (searchQuery) {
+        const result = await searchUserNotes({
+            query: searchQuery,
+            page: currentPage,
+            limit: PAGE_SIZE,
+            sort: ['newest', 'oldest', 'title'].includes(sortParam)
+                ? sortParam
+                : 'newest'
+        })
+        notes = result.notes
+        totalCount = result.totalCount
+    } else {
+        const result = await getUserNotesPaginated({
+            page: currentPage,
+            limit: PAGE_SIZE,
+            sort: ['newest', 'oldest', 'title'].includes(sortParam)
+                ? sortParam
+                : 'newest'
+        })
+        notes = result.notes
+        totalCount = result.totalCount
+    }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -63,7 +77,9 @@ export default async function NotesPage({
                             내 노트
                         </h1>
                         <p className="text-gray-600 mt-1">
-                            {searchQuery
+                            {tagFilter
+                                ? `'${tagFilter}' 태그 노트 ${totalCount}개`
+                                : searchQuery
                                 ? `'${searchQuery}' 검색 결과 ${totalCount}개`
                                 : `총 ${totalCount}개의 노트`}
                         </p>
